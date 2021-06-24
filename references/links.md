@@ -1,0 +1,3 @@
+- [yasa](https://github.com/raphaelvallat/yasa/blob/master/notebooks/09_IRASA.ipynb)
+- [foof](https://fooof-tools.github.io/fooof/auto_examples/analyses/plot_mne_example.html#sphx-glr-auto-examples-analyses-plot-mne-example-py)
+- [bycycle](https://bycycle-tools.github.io/bycycle/)
