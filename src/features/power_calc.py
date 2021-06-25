@@ -200,6 +200,7 @@ def calculate_powers():
     saveDir = pathlib.Path("../../data/interim/powers")
     saveDir.mkdir(exist_ok=True)
     for ifile in failai:
+        #  ifile = failai[0]
         data = import_eeg(ifile)
         data= data.set_eeg_reference()
         erp = data.average()
@@ -228,13 +229,20 @@ def calculate_powers():
         save_power(spectra_bl, freqs, erp, 'erp_power_bl', ifile.stem, saveDir)
         # erp ratio
         spectra = spectra/spectra_bl
-        save_power(spectra, freqs, erp, 'erp_power_bl', ifile.stem, saveDir)
+        save_power(spectra, freqs, erp, 'erp_power_ratio', ifile.stem, saveDir)
 
-def get_profile():
-    pass
-
-def igf():
+def normalize_erp():
+    data_dir = "../../data/interim/powers/"
+    failai = list(pathlib.Path(data_dir).glob("erp_power.csv"))
+    saveDir = pathlib.Path("../../data/interim/powers")
+    saveDir.mkdir(exist_ok=True)
+    for ifile in failai:
+        df = pd.read_csv(ifile)
+        for group, datt in df.groupby(by=['subjname']):
+            norm = datt.pivot_table(index='stimfreq',values='spectra',columns='ifreq').mean()
+            datt.pivot_table(index='stimfreq',values='spectra',columns='ifreq').T.plot()
 
 
 if __name__ == "__main__":
-    plot_psds()
+    calculate_powers()
+
