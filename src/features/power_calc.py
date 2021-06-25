@@ -14,6 +14,12 @@ import re
 
 def import_eeg(ifile):
     data = mne.io.read_epochs_eeglab(ifile, eog="auto")
+    data.pick_types(eeg=True)
+    try:
+        data.drop_channels('EKG')
+    except:
+        print('no EKG')
+    data.info
     data.load_data()
     data.set_montage("standard_1020")
     data.set_eeg_reference(ref_channels="average")
@@ -195,7 +201,7 @@ def save_power(spectra, freqs, erp, saveName, filename, saveDir):
 
 
 def calculate_powers():
-    data_dir = "../../data/raw"
+    data_dir = "../../../../../Data/CleanData/"
     failai = list(pathlib.Path(data_dir).glob("*.set"))
     saveDir = pathlib.Path("../../data/interim/powers")
     saveDir.mkdir(exist_ok=True)
@@ -245,4 +251,3 @@ def normalize_erp():
 
 if __name__ == "__main__":
     calculate_powers()
-
