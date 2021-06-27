@@ -1,5 +1,6 @@
 from os import write
 import pandas as pd
+import matplotlib pyplot as plt
 
 def igf_compare_measures():
     data_dir = "../../data/interim/igf/"
@@ -36,17 +37,23 @@ def igf_meta_corr():
     ferp_power_igf_mean = ferp_power_igf.set_index('subj')[channels].mean(axis=1)
     ferp_power_igf_value_mean = ferp_power_igf_value.set_index('subj')[channels].mean(axis=1)
     calc_cor(meta.copy(), 'total_power_ratio_igf', ftotalpower_ratio_igf_mean.copy())
-    calc_cor(meta.copy(), 'total_power_ratio_igf_cmean', ftotalpower_ratio_igf_cmean.copy())
+    calc_cor(meta.copy(), 'total_power_ratio_igf_cmean', ftotalpower_ratio_igf_cmean['mean_center'].copy())
     calc_cor(meta.copy(), 'total_power_ratio_igf_value', ftotalpower_ratio_igf_value_mean.copy())
-    calc_cor(meta.copy(), 'total_power_ratio_igf_cmean_value', ftotalpower_ratio_igf_value_cmean.copy())
+    calc_cor(meta.copy(), 'total_power_ratio_igf_cmean_value', ftotalpower_ratio_igf_value_cmean['mean_center'].copy())
     calc_cor(meta.copy(), 'erp_power_igf', ferp_power_igf_mean.copy())
-    calc_cor(meta.copy(), 'erp_power_igf_cmean', ferp_power_igf_cmean.copy())
+    calc_cor(meta.copy(), 'erp_power_igf_cmean', ferp_power_igf_cmean['mean_center'].copy())
     calc_cor(meta.copy(), 'erp_power_igf_value', ferp_power_igf_value_mean.copy())
-    calc_cor(meta.copy(), 'erp_power_igf_cmean_value', ferp_power_igf_value_cmean.copy())
+    calc_cor(meta.copy(), 'erp_power_igf_cmean_value', ferp_power_igf_value_cmean['mean_center'].copy())
 
 def calc_cor(metadata, name, measure):
     for col in metadata:
         r,p=stats.pearsonr(metadata[col],measure)
+        metadata[name]=measure.values
+        fig=sns.lmplot(data=metadata,y=col,x=name)
+        ax = fig.axes
+        plt.text(0.8,0.9,f'ρ = {r:.2}\np = {p:.2}', transform=ax[0][0].transAxes)
+        fig.savefig(saveDir.joinpath(name + '_' +col+'.png'))
+        plt.close()
         csvfile=saveDir.joinpath(name+'.csv')
         if not csvfile.exists():
             csvfile.write_text('meta, measure, r,p')
