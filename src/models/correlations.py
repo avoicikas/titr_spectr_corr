@@ -1,19 +1,20 @@
-from os import write
+import pathlib
+import seaborn as sns
+import matplotlib.pyplot as plt
 import pandas as pd
-import matplotlib pyplot as plt
+import scipy.stats as stats
 
 def igf_compare_measures():
     data_dir = "../../data/interim/igf/"
     failai = list(pathlib.Path(data_dir).glob("*igf.csv"))
     failai
     df = [pd.read_csv(x) for x in failai]
-    coreliacijos =[]
+    corelations =[]
     for idf in df:
         for iidf in df:
-            coreliacijos.append(idf.corrwith(iidf, axis=1).mean())
-
-    coreliacijos=np.reshape(coreliacijos,[64//len(failai), len(failai)])
-    sns.heatmap(coreliacijos,cmap='coolwarm', annot=True)
+            corelations.append(idf.corrwith(iidf, axis=1).mean())
+    corelations=np.reshape(corelations,[64//len(failai), len(failai)])
+    sns.heatmap(corelations,cmap='coolwarm', annot=True)
     plt.xlabel([x.stem for x in failai])
 
 def igf_meta_corr():
@@ -36,19 +37,19 @@ def igf_meta_corr():
     ftotalpower_ratio_igf_value_mean = ftotalpower_ratio_igf_value.set_index('subj')[channels].mean(axis=1)
     ferp_power_igf_mean = ferp_power_igf.set_index('subj')[channels].mean(axis=1)
     ferp_power_igf_value_mean = ferp_power_igf_value.set_index('subj')[channels].mean(axis=1)
-    calc_cor(meta.copy(), 'total_power_ratio_igf', ftotalpower_ratio_igf_mean.copy())
-    calc_cor(meta.copy(), 'total_power_ratio_igf_cmean', ftotalpower_ratio_igf_cmean['mean_center'].copy())
-    calc_cor(meta.copy(), 'total_power_ratio_igf_value', ftotalpower_ratio_igf_value_mean.copy())
-    calc_cor(meta.copy(), 'total_power_ratio_igf_cmean_value', ftotalpower_ratio_igf_value_cmean['mean_center'].copy())
-    calc_cor(meta.copy(), 'erp_power_igf', ferp_power_igf_mean.copy())
-    calc_cor(meta.copy(), 'erp_power_igf_cmean', ferp_power_igf_cmean['mean_center'].copy())
-    calc_cor(meta.copy(), 'erp_power_igf_value', ferp_power_igf_value_mean.copy())
-    calc_cor(meta.copy(), 'erp_power_igf_cmean_value', ferp_power_igf_value_cmean['mean_center'].copy())
+    calc_cor(meta.copy(), 'total_power_ratio_igf', ftotalpower_ratio_igf_mean.copy(),saveDir)
+    calc_cor(meta.copy(), 'total_power_ratio_igf_cmean', ftotalpower_ratio_igf_cmean.copy()['mean_center'].values,saveDir)
+    calc_cor(meta.copy(), 'total_power_ratio_igf_value', ftotalpower_ratio_igf_value_mean.copy(),saveDir)
+    calc_cor(meta.copy(), 'total_power_ratio_igf_cmean_value', ftotalpower_ratio_igf_value_cmean.copy()['mean_center'].values,saveDir)
+    calc_cor(meta.copy(), 'erp_power_igf', ferp_power_igf_mean.copy(),saveDir)
+    calc_cor(meta.copy(), 'erp_power_igf_cmean', ferp_power_igf_cmean.copy()['mean_center'].values,saveDir)
+    calc_cor(meta.copy(), 'erp_power_igf_value', ferp_power_igf_value_mean.copy(),saveDir)
+    calc_cor(meta.copy(), 'erp_power_igf_cmean_value', ferp_power_igf_value_cmean.copy()['mean_center'].values,saveDir)
 
-def calc_cor(metadata, name, measure):
+def calc_cor(metadata, name, measure, saveDir):
     for col in metadata:
         r,p=stats.pearsonr(metadata[col],measure)
-        metadata[name]=measure.values
+        metadata[name]=measure
         fig=sns.lmplot(data=metadata,y=col,x=name)
         ax = fig.axes
         plt.text(0.8,0.9,f'ρ = {r:.2}\np = {p:.2}', transform=ax[0][0].transAxes)
@@ -56,9 +57,9 @@ def calc_cor(metadata, name, measure):
         plt.close()
         csvfile=saveDir.joinpath(name+'.csv')
         if not csvfile.exists():
-            csvfile.write_text('meta, measure, r,p')
+            csvfile.write_text('meta, measure, r,p\n')
         with open(csvfile,'a') as f:
-                f.write(f'{col},{name},{r},{p}')
+                f.write(f'{col},{name},{r},{p}\n')
     metadata.loc[:,name] = measure
     meta_flat = metadata.melt(id_vars=name)
     fig=sns.lmplot(data=meta_flat,x=name,y='value',hue='variable')
